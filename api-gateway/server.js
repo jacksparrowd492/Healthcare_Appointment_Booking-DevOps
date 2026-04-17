@@ -13,4 +13,10 @@ app.use("/appointments", createProxyMiddleware({
   changeOrigin: true
 }));
 
+app.get("/", (req, res) => {
+  res.send("API Gateway is running 🚀");
+});
+
+
+
 app.listen(5000, () => console.log("Gateway running on 5000"));

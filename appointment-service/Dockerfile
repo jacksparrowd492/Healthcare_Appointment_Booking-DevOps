@@ -1,12 +1,30 @@
-FROM python:3.10-slim AS builder
-WORKDIR /app
-COPY . .
-RUN pip install --user flask pymongo PyJWT flask-cors
+# -------- Build Stage --------
+FROM node:18-alpine AS build
 
-FROM python:3.10-slim
 WORKDIR /app
-COPY --from=builder /root/.local /root/.local
+
+COPY package*.json ./
+
+# Install only production deps later
+RUN npm install
+
 COPY . .
-ENV PATH=/root/.local/bin:$PATH
-EXPOSE 5001
-CMD ["python", "app.py"]
+
+# -------- Production Stage --------
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy only necessary files
+COPY --from=build /app /app
+
+# Remove dev dependencies
+RUN npm prune --production
+
+# Security best practice
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+EXPOSE 5000
+
+CMD ["node", "index.js"]
