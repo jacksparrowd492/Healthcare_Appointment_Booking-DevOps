@@ -22,8 +22,13 @@ pipeline {
         stage('Security Scan (Trivy)') {
             steps {
                 sh '''
-                docker run --rm aquasec/trivy image auth-service
-                docker run --rm aquasec/trivy image appointment-service
+                docker run --rm \
+                -v /var/run/docker.sock:/var/run/docker.sock \
+                aquasec/trivy image auth-service
+
+                docker run --rm \
+                -v /var/run/docker.sock:/var/run/docker.sock \
+                aquasec/trivy image appointment-service
                 '''
             }
         }
