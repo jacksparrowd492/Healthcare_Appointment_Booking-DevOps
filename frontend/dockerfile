@@ -5,21 +5,15 @@ COPY . /usr/share/nginx/html
 
 # Create nginx config for SPA
 RUN echo 'server { \
-    listen 80; \
+    listen 8080; \
     server_name localhost; \
     root /usr/share/nginx/html; \
     index index.html; \
     location / { \
         try_files $uri $uri/ /index.html; \
     } \
-    location /api/auth { \
-        proxy_pass http://auth:5000; \
-    } \
-    location /api/appointment { \
-        proxy_pass http://appointment:5001; \
-    } \
 }' > /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
+EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]

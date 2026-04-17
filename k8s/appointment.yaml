@@ -14,6 +14,21 @@ spec:
     spec:
       containers:
       - name: appointment
-        image: appointment-service
+        image: appointment-service:latest
+        imagePullPolicy: Never
         ports:
-        - containerPort: 5001
+        - containerPort: 5002
+        env:
+        - name: MONGO_URI
+          value: mongodb://mongo:27017/appointmentdb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: appointment-service
+spec:
+  selector:
+    app: appointment
+  ports:
+    - port: 5002
+      targetPort: 5002

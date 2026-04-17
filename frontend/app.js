@@ -1,8 +1,7 @@
-// API Configuration - uses localhost for development
-// In Docker, the frontend nginx proxies /api/* to backend services
+// API Configuration - must match docker-compose ports
 const API_BASE = {
-    auth: 'http://localhost:5000',
-    appointment: 'http://localhost:5001'
+    auth: 'http://localhost:5005',
+    appointment: 'http://localhost:5006'
 };
 
 // Doctor data by department

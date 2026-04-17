@@ -35,7 +35,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                echo "Deployment step"
+                sh 'kubectl apply -f k8s/'
             }
         }
     }

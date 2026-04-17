@@ -1,41 +1,55 @@
-version: '3'
+version: '3.8'
 
 services:
   mongo:
-    image: mongo
+    image: mongo:latest
+    container_name: mongo
+    restart: always
     ports:
       - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=devops
+      - MONGO_INITDB_ROOT_PASSWORD=karthi2004
+    volumes:
+      - mongo-data:/data/db
 
-  auth:
+  auth-service:
     build: ./auth-service
+    container_name: auth-service
     ports:
-      - "5000:5000"
-    depends_on:
-      - mongo
+      - "5005:5000"
     environment:
       - MONGO_HOST=mongo
-      - MONGO_PORT=27017
+      - MONGO_USER=devops
+      - MONGO_PASS=karthi2004
+      - JWT_SECRET=secret123
+    depends_on:
+      - mongo
 
-  appointment:
+  appointment-service:
     build: ./appointment-service
+    container_name: appointment-service
     ports:
-      - "5001:5001"
-    depends_on:
-      - mongo
+      - "5006:5006"
     environment:
       - MONGO_HOST=mongo
-      - MONGO_PORT=27017
-      # Add your SMTP credentials here for email functionality
-      # - SMTP_SERVER=smtp.gmail.com
-      # - SMTP_PORT=587
-      # - SMTP_USERNAME=your-email@gmail.com
-      # - SMTP_PASSWORD=your-app-password
-      # - FROM_EMAIL=healthcare@example.com
+      - MONGO_USER=devops
+      - MONGO_PASS=karthi2004
+      - JWT_SECRET=secret123
+    depends_on:
+      - mongo
 
   frontend:
     build: ./frontend
+    container_name: frontend
     ports:
-      - "8080:80"
+      - "8081:8080"  # Changed host port to 8081 to avoid conflict
+    environment:
+      - REACT_APP_AUTH_URL=http://localhost:5005
+      - REACT_APP_APPOINTMENT_URL=http://localhost:5006
     depends_on:
-      - auth
-      - appointment
+      - auth-service
+      - appointment-service
+
+volumes:
+  mongo-data:
