@@ -7,12 +7,8 @@ pipeline {
     }
 
     stages {
-
-        stage('Clone Repo') {
-            steps {
-                git 'https://github.com/jacksparrowd492/Healthcare_Appointment_Booking-DevOps.git'
-            }
-        }
+        // Jenkins automatically checks out the 'main' branch at the start.
+        // No manual 'git clone' stage is needed.
 
         stage('Build Auth Service') {
             steps {
@@ -35,11 +31,11 @@ pipeline {
                 sh """
                 docker run --rm \
                 -v /var/run/docker.sock:/var/run/docker.sock \
-                aquasec/trivy image --severity HIGH,CRITICAL auth-service || true
+                aquasec/trivy image --severity HIGH,CRITICAL $DOCKERHUB_USER/auth-service:$IMAGE_TAG || true
 
                 docker run --rm \
                 -v /var/run/docker.sock:/var/run/docker.sock \
-                aquasec/trivy image --severity HIGH,CRITICAL appointment-service || true
+                aquasec/trivy image --severity HIGH,CRITICAL $DOCKERHUB_USER/appointment-service:$IMAGE_TAG || true
                 """
             }
         }
@@ -51,7 +47,7 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                    sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
                 }
             }
         }
@@ -76,13 +72,19 @@ pipeline {
 
         stage('Push Updated Manifest to Git') {
             steps {
-                sh """
-                git config user.name "jenkins"
-                git config user.email "jenkins@example.com"
-                git add .
-                git commit -m "Update image tag to $IMAGE_TAG"
-                git push origin main
-                """
+                withCredentials([usernamePassword(
+                    credentialsId: 'github-creds', 
+                    usernameVariable: 'GIT_USER',
+                    passwordVariable: 'GIT_PASS'
+                )]) {
+                    sh """
+                    git config user.name "jenkins"
+                    git config user.email "jenkins@example.com"
+                    git add k8s/*.yaml
+                    git commit -m "Update image tag to $IMAGE_TAG [skip ci]" || true
+                    git push https://\$GIT_USER:\$GIT_PASS@github.com/jacksparrowd492/Healthcare_Appointment_Booking-DevOps.git HEAD:main
+                    """
+                }
             }
         }
     }
