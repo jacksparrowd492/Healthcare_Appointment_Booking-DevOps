@@ -3,12 +3,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/<your-username>/healthcare-devops.git'
-            }
-        }
-
         stage('Build Auth Service') {
             steps {
                 dir('auth-service') {
@@ -36,7 +30,7 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh 'kubectl apply -f k8s/'
+                echo "Deployment step"
             }
         }
     }
