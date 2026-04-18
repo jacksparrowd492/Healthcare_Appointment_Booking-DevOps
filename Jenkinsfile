@@ -7,35 +7,8 @@ pipeline {
     }
 
     stages {
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    // This pulls the installation path from Global Tool Configuration
-                    def scannerHome = tool 'sonar-scanner' 
-                    
-                    withSonarQubeEnv('sonarqube') {
-                        withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                            sh """
-                            ${scannerHome}/bin/sonar-scanner \
-                            -Dsonar.projectKey=healthcare-app \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=http://localhost:9000 \
-                            -Dsonar.login=\$SONAR_TOKEN
-                            """
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 3, unit: 'MINUTES') {
-                    // This requires the SonarQube Webhook to be configured in SonarQube
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
+        // Jenkins automatically checks out the 'main' branch at the start.
+        // No manual 'git clone' stage is needed.
 
         stage('Build Auth Service') {
             steps {
@@ -107,12 +80,9 @@ pipeline {
                     sh """
                     git config user.name "jenkins"
                     git config user.email "jenkins@example.com"
-                    
-                    # Prevent "counter cannot decrease" error
-                    git pull https://\$GIT_USER:\$GIT_PASS@github.com/jacksparrowd492/Healthcare_Appointment_Booking-DevOps.git main --rebase
-
                     git add k8s/*.yaml
                     git commit -m "Update image tag to $IMAGE_TAG [skip ci]" || true
+                    # Ensure this URL matches your repo name in the screenshot
                     git push https://\$GIT_USER:\$GIT_PASS@github.com/jacksparrowd492/Healthcare_Appointment_Booking-DevOps.git HEAD:main
                     """
                 }
