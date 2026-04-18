@@ -105,10 +105,21 @@ pipeline {
                     passwordVariable: 'GIT_PASS'
                 )]) {
                     sh """
+                    # Setup identity
                     git config user.name "jenkins"
                     git config user.email "jenkins@example.com"
+                    
+                    # 1. Pull the latest changes from GitHub to prevent "counter decrease" errors
+                    # We use --rebase to keep the history clean
+                    git pull https://\$GIT_USER:\$GIT_PASS@github.com/jacksparrowd492/Healthcare_Appointment_Booking-DevOps.git main --rebase
+
+                    # 2. Add the changed manifest files
                     git add k8s/*.yaml
+                    
+                    # 3. Commit the changes (|| true prevents failure if there's nothing new to commit)
                     git commit -m "Update image tag to $IMAGE_TAG [skip ci]" || true
+                    
+                    # 4. Push back to the main branch
                     git push https://\$GIT_USER:\$GIT_PASS@github.com/jacksparrowd492/Healthcare_Appointment_Booking-DevOps.git HEAD:main
                     """
                 }
