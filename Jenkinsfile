@@ -82,6 +82,7 @@ pipeline {
                     git config user.email "jenkins@example.com"
                     git add k8s/*.yaml
                     git commit -m "Update image tag to $IMAGE_TAG [skip ci]" || true
+                    # Ensure this URL matches your repo name in the screenshot
                     git push https://\$GIT_USER:\$GIT_PASS@github.com/jacksparrowd492/Healthcare_Appointment_Booking-DevOps.git HEAD:main
                     """
                 }
