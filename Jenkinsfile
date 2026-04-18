@@ -6,9 +6,36 @@ pipeline {
         IMAGE_TAG = "v1.${BUILD_NUMBER}"
     }
 
+    tools {
+        // Make sure sonar-scanner is configured in Jenkins
+        sonarScanner 'sonar-scanner'
+    }
+
     stages {
-        // Jenkins automatically checks out the 'main' branch at the start.
-        // No manual 'git clone' stage is needed.
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                        sh """
+                        sonar-scanner \
+                          -Dsonar.projectKey=healthcare-app \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=http://localhost:9000 \
+                          -Dsonar.login=$SONAR_TOKEN
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 3, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
 
         stage('Build Auth Service') {
             steps {
@@ -82,7 +109,6 @@ pipeline {
                     git config user.email "jenkins@example.com"
                     git add k8s/*.yaml
                     git commit -m "Update image tag to $IMAGE_TAG [skip ci]" || true
-                    # Ensure this URL matches your repo name in the screenshot
                     git push https://\$GIT_USER:\$GIT_PASS@github.com/jacksparrowd492/Healthcare_Appointment_Booking-DevOps.git HEAD:main
                     """
                 }
