@@ -64,8 +64,8 @@ pipeline {
         stage('Update Kubernetes Manifest') {
             steps {
                 sh """
-                sed -i 's|auth-service:.*|auth-service:$IMAGE_TAG|' k8s/auth-deployment.yaml
-                sed -i 's|appointment-service:.*|appointment-service:$IMAGE_TAG|' k8s/appointment-deployment.yaml
+                sed -i 's|auth-service:.*|auth-service:$IMAGE_TAG|' k8s/*.yaml
+                sed -i 's|appointment-service:.*|appointment-service:$IMAGE_TAG|' k8s/*.yaml
                 """
             }
         }
