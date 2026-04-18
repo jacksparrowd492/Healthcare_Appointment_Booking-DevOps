@@ -28,10 +28,9 @@ kind: Service
 metadata:
   name: appointment-service
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: appointment
   ports:
     - port: 5002
       targetPort: 5002
-      nodePort: 30007
