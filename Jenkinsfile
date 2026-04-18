@@ -6,24 +6,23 @@ pipeline {
         IMAGE_TAG = "v1.${BUILD_NUMBER}"
     }
 
-    tools {
-        // Make sure sonar-scanner is configured in Jenkins
-        sonarScanner 'sonar-scanner'
-    }
-
     stages {
-
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sonarqube') {
-                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                        sh """
-                        sonar-scanner \
-                          -Dsonar.projectKey=healthcare-app \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=http://localhost:9000 \
-                          -Dsonar.login=$SONAR_TOKEN
-                        """
+                script {
+                    // This pulls the installation path from Global Tool Configuration
+                    def scannerHome = tool 'sonar-scanner' 
+                    
+                    withSonarQubeEnv('sonarqube') {
+                        withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                            sh """
+                            ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=healthcare-app \
+                            -Dsonar.sources=. \
+                            -Dsonar.host.url=http://localhost:9000 \
+                            -Dsonar.login=\$SONAR_TOKEN
+                            """
+                        }
                     }
                 }
             }
@@ -32,6 +31,7 @@ pipeline {
         stage('Quality Gate') {
             steps {
                 timeout(time: 3, unit: 'MINUTES') {
+                    // This requires the SonarQube Webhook to be configured in SonarQube
                     waitForQualityGate abortPipeline: true
                 }
             }
@@ -105,21 +105,14 @@ pipeline {
                     passwordVariable: 'GIT_PASS'
                 )]) {
                     sh """
-                    # Setup identity
                     git config user.name "jenkins"
                     git config user.email "jenkins@example.com"
                     
-                    # 1. Pull the latest changes from GitHub to prevent "counter decrease" errors
-                    # We use --rebase to keep the history clean
+                    # Prevent "counter cannot decrease" error
                     git pull https://\$GIT_USER:\$GIT_PASS@github.com/jacksparrowd492/Healthcare_Appointment_Booking-DevOps.git main --rebase
 
-                    # 2. Add the changed manifest files
                     git add k8s/*.yaml
-                    
-                    # 3. Commit the changes (|| true prevents failure if there's nothing new to commit)
                     git commit -m "Update image tag to $IMAGE_TAG [skip ci]" || true
-                    
-                    # 4. Push back to the main branch
                     git push https://\$GIT_USER:\$GIT_PASS@github.com/jacksparrowd492/Healthcare_Appointment_Booking-DevOps.git HEAD:main
                     """
                 }
