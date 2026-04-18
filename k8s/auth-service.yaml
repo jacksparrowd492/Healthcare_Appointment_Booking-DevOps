@@ -1,4 +1,4 @@
-image: pikachu7/auth-service:v1
+image: pikachu7/auth-service:v1.21
 imagePullPolicy: Always
 apiVersion: v1
 kind: Service
