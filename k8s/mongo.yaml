@@ -23,6 +23,7 @@ kind: Service
 metadata:
   name: mongo
 spec:
+  type: ClusterIP
   selector:
     app: mongo
   ports:

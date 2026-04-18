@@ -3,9 +3,9 @@ kind: Service
 metadata:
   name: appointment-service
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: appointment
   ports:
-    - port: 5001
-      targetPort: 5001
+    - port: 5002
+      targetPort: 5002
